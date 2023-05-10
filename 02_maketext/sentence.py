@@ -2,49 +2,31 @@ import random
 import datetime
 
 
-EPOCHS = 2000
-NUM_SENTENCES = 40
+EPOCHS = 5000
+NUM_SENTENCES = 50
 NUM_WORDS = 10
 NUM_LETTERS = 5
 MAX_WORDS = 20
 CROSSOVER_RATE = 0.1
 SENTENCE_MUTATION_RATE = 1
 WORD_MUTATION_RATE = 1
+WORD_GROWTH_RATE = 0.75 # 0.5 means words have equal chance to grow or shrink
 ADAPT_RATE = 1
 SELECT_RATE = 0.5
 
 geneSet = "abcdefghijklmnopqrstuvwxyz"
 
-def make_word_set(file1, file2):
+def make_word_set(file):
     # this function takes a file and creates a set of all the words
     # open the file
-    with open(file1, 'r') as f:
+    with open(file, 'r') as f:
         # read the file
         text = f.read()
         # split the text into a list of words
         words = text.split()
-        # create a set of the words that are 4 or more letters long
-        wordset = set([word for word in words if len(word) > 3])
-        # add the words 'a' and 'i' to the wordset
-        wordset.add('a')
-        wordset.add('i')
-        # add the two letter word list to the wordset
-        two_letters = ["as", "to", "be", "in", "by", "is", "it", "at", "of", "or", "on", "an", "us", "if", "my", "do", "no", "he", "up", "so", "pm", "am", "me", "re", "go", "cd", "tv", "pc", "id", "oh", "ma", "mr", "ms", "dr", "os", "ex", "ft", "vs", "ie", "eg"]
-        for word in two_letters:
-            wordset.add(word)
-    # add the three letter word list to the wordset
-    with open(file2, 'r') as f:
-        # read the file
-        text = f.read()
-        # split the text into a list of words
-        words = text.split()
-        # loop through the wordset
-        for word in words:
-            # add the word to the wordset
-            wordset.add(word)
-            
+        wordset = set([word for word in words])
         # return the wordset
-        return wordset
+    return wordset
 
 # function to generate random sentences
 def generate_sentences(num, words, letters):
@@ -151,7 +133,7 @@ def sentence_mutate(sentences, SENTENCE_MUTATION_RATE):
                     sentence.insert(-1, word)
             else:
                 # if the sentence has 3 or more words
-                if len(sentence) >= 3:
+                if len(sentence) >= 4:
                     # remove a random word if it is not in the wordlist
                     word = random.choice(sentence[:-1])
                     if word not in wordset:
@@ -166,7 +148,7 @@ def word_mutate(sentences, wordset, WORD_MUTATION_RATE):
                 # flip a coin, if heads add a letter, if tails remove a letter
                 if random.random() < WORD_MUTATION_RATE:
                     # flip a coin, if heads add a letter, if tails remove a letter
-                    if len(sentence[i]) < 15 and random.random() < 0.5:
+                    if len(sentence[i]) < 15 and random.random() < WORD_GROWTH_RATE:
                         # add a letter
                         sentence[i] += random.choice(geneSet)
                     else:
@@ -222,7 +204,7 @@ test_sentences = generate_sentences(NUM_SENTENCES, NUM_WORDS, NUM_LETTERS)
 
 # create a wordset
 # make_dict('20k.txt')
-wordset = make_word_set("20k.txt", "3_letter_words_condensed.txt")
+wordset = make_word_set("words_sorted.txt")
 
 
 # calculate the fitness of each sentence
@@ -253,7 +235,7 @@ for i in range(EPOCHS):
     test_sentences = selection(test_sentences)
     test_sentences = fitness(test_sentences, wordset)
     # display the sentences
-    if i % 500 == 0:
+    if i % 1000 == 0:
         print("Epoch", i + 1)
         display(test_sentences)   
 print("Epoch", i + 1)
