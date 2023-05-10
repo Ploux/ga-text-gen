@@ -1,6 +1,13 @@
 import random
 import datetime
 
+
+EPOCHS = 1000
+CROSSOVER_RATE = 0.1
+SENTENCE_MUTATION_RATE = 1
+WORD_MUTATION_RATE = 1
+ADAPT_RATE = 1
+
 geneSet = "abcdefghijklmnopqrstuvwxyz'"
 
 def makedict(file, newfile=False):
@@ -12,8 +19,16 @@ def makedict(file, newfile=False):
         text = f.read()
         # split the text into a list of words
         words = text.split()
-        # create a set of the words, converting them to lowercase
-        wordset = set([word.lower() for word in words])
+        # create a set of the words that are 3 or more letters long, converting them to lowercase
+        wordset = set([word.lower() for word in words if len(word) > 2])
+        # add the words 'a' and 'i' to the wordset
+        wordset.add('a')
+        wordset.add('i')
+        # add the two letter word list to the wordset
+        two_letters = ["as", "to", "be", "in", "by", "is", "it", "at", "of", "or", "on", "an", "us", "if", "my", "do", "no", "he", "up", "so", "pm", "am", "me", "re", "go", "cd", "tv", "pc", "id", "oh", "ma", "mr", "ms", "dr", "os", "ex", "ft", "vs", "ie", "eg"]
+        for word in two_letters:
+            wordset.add(word)
+               
         # if newfile is true
         if newfile:
             # create a new file
@@ -86,7 +101,7 @@ def display(sentences):
     print()
     
 # function to breed the sentences
-def crossover(sentences):
+def crossover(sentences, wordset, CROSSOVER_RATE):
     # randomize the order of the sentences
     random.shuffle(sentences)
     # go through each pair of sentences; for now assume even number of sentences
@@ -96,10 +111,11 @@ def crossover(sentences):
             # check the word at this position in each sentence
             # if they are both words, or neither are words, do nothing
             # if one is a word and the other is not, replace the non-word with the word
-            if sentences[i][j] in wordset and sentences[i + 1][j] not in wordset:
-                sentences[i + 1][j] = sentences[i][j]
-            elif sentences[i][j] not in wordset and sentences[i + 1][j] in wordset:
-                sentences[i][j] = sentences[i + 1][j]
+            if random.random() < CROSSOVER_RATE:
+                if sentences[i][j] in wordset and sentences[i + 1][j] not in wordset:
+                    sentences[i + 1][j] = sentences[i][j]
+                elif sentences[i][j] not in wordset and sentences[i + 1][j] in wordset:
+                    sentences[i][j] = sentences[i + 1][j]
     # return the sentences
     return sentences
 
@@ -109,7 +125,7 @@ def sentence_mutate(sentences, SENTENCE_MUTATION_RATE):
             # flip a coin, if heads add a word, if tails remove a word
             if random.random() < 0.5:
                 # if the sentence does not have a fitness value = len(sentence) - 1
-                if sentence[-1] != len(sentence) - 1:
+                if len(sentence) < 21 and sentence[-1] != len(sentence) - 1:
                     # add a 5 letter word at the end (before the fitness value)
                     word = ''
                     for i in range(5):
@@ -118,22 +134,51 @@ def sentence_mutate(sentences, SENTENCE_MUTATION_RATE):
                     sentence.insert(-1, word)
             else:
                 # if the sentence has 3 or more words
-                if len(sentence) > 3:
+                if len(sentence) > 3 and sentence[-1] != len(sentence) - 1:
                     # remove the last word
                     sentence.pop(-2)
     return sentences
 
-def word_mutate(sentences, WORD_MUTATION_RATE):
+def word_mutate(sentences, wordset, WORD_MUTATION_RATE):
     for sentence in sentences:
         for i in range(len(sentence) - 1):
-            if random.random() < WORD_MUTATION_RATE:
+            # if the word is not in the wordset
+            if sentence[i] not in wordset:
                 # flip a coin, if heads add a letter, if tails remove a letter
-   
+                if random.random() < WORD_MUTATION_RATE:
+                    # flip a coin, if heads add a letter, if tails remove a letter
+                    if len(sentence[i]) < 15 and random.random() < 0.5:
+                        # add a letter
+                        sentence[i] += random.choice(geneSet)
+                    else:
+                        if len(sentence[i]) > 1:
+                            # remove a letter
+                            sentence[i] = sentence[i][:-1]
+    return sentences
+
+def adapt(sentences, wordset, ADAPT_RATE):
+    # goes through each sentence, if a word is not in the wordset, replace a random letter with a random letter
+    for sentence in sentences:
+        for i in range(len(sentence) - 1):
+            # if the word is not in the wordset
+            if sentence[i] not in wordset:
+                if random.random() < ADAPT_RATE:
+                    # replace a random letter with a random letter (might be the same, this is fine)
+                    # choose a random index
+                    index = random.randint(0, len(sentence[i]) - 1)
+                    # replace the letter at that index with a random letter
+                    sentence[i] = sentence[i][:index] + random.choice(geneSet) + sentence[i][index + 1:]
+                    # sentence[i] = sentence[i][:random.randint(0, len(sentence[i]) - 1)] + random.choice(geneSet) + sentence[i][random.randint(0, len(sentence[i]) - 1):]
+    return sentences
+    
    
     
-test_sentences = sentences(7, 10, 5)
+test_sentences = sentences(20, 10, 5)
+
 # append a sentence with some real words
-test_sentences.append(['hello', 'world', 'sasrt', 'bdrr', 'wfcra', 'ttt', 'qq', 'asruuul', 'jarfer', 'pppo', 0])
+# test_sentences.append(['hello', 'wooor', 'sasrt', 'bdrr', 'wfcra', 'ttt', 'qq', 'asruuul', 'jarfer', 'pppo', 0])
+# test_sentences.append(['hello', 'wooo', 'sasrt', 'bdrr', 0])
+
 print("Initial sentences:")
 display(test_sentences)
 
@@ -145,16 +190,31 @@ test_sentences = fitness(test_sentences, wordset)
 print("Initial sentences with fitness:")
 display(test_sentences)
 
-EPOCHS = 5
-SENTENCE_MUTATION_RATE = 1
-WORD_MUTATION_RATE = 1
+"""
+# test adaptation
+test_sentences = adapt(test_sentences, wordset, 1)
+print("After adaptation:")
+display(test_sentences)
+"""
 
 # loop through the epochs
 for i in range(EPOCHS):
     # breed the sentences
-    test_sentences = crossover(test_sentences)
+    test_sentences = crossover(test_sentences, wordset, CROSSOVER_RATE)
+    # print("After crossover:")
+    # display(test_sentences)
     # sentence mutation
     test_sentences = sentence_mutate(test_sentences, SENTENCE_MUTATION_RATE)
+    # print("After sentence mutation:")
+    # display(test_sentences)
+    # word mutation
+    test_sentences = word_mutate(test_sentences, wordset, WORD_MUTATION_RATE)
+    # print("After word mutation:")
+    # display(test_sentences)
+    # adapt
+    test_sentences = adapt(test_sentences, wordset, ADAPT_RATE)
+    # print("After adapt:")
+    # display(test_sentences)
     # calculate the fitness of each sentence
     test_sentences = fitness(test_sentences, wordset)
     # display the sentences
