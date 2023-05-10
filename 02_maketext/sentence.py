@@ -4,7 +4,7 @@ import datetime
 geneSet = "abcdefghijklmnopqrstuvwxyz'"
 
 def makedict(file, newfile=False):
-    # this function takes a dictionary and creates a set of all the words
+    # this function takes a file and creates a set of all the words
     # newfile is a boolean that determines whether or not to create a new file
     # open the file
     with open(file, 'r') as f:
@@ -47,7 +47,17 @@ def sentences(num, words, letters):
     return sentences
 
 # function to calculate the fitness of a sentence
-# def fitness(sentence, target):
+def fitness(sentence, wordset):
+    # initialize the fitness
+    fitness = 0
+    # loop through each word in the sentence
+    for word in sentence:
+        # if the word is in the wordset
+        if word in wordset:
+            # add 1 to the fitness
+            fitness += 1
+    # return the fitness
+    return fitness
 
 # function to display the list of sentences
 def display(sentences):
@@ -62,9 +72,11 @@ def display(sentences):
 test_sentences = sentences(5, 10, 5)
 display(test_sentences)
 
+wordset = makedict("02_maketext/american-english.txt")
+
 # create a wordset and print the first 100 words, the length, and save it to a file
 wordset = makedict("02_maketext/american-english.txt", True)
-print(list(wordset)[:100])
-print(len(wordset))
+# print(list(wordset)[:100])
+# print(len(wordset))
 
     
