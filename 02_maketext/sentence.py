@@ -103,11 +103,37 @@ def crossover(sentences):
     # return the sentences
     return sentences
 
-        
+def sentence_mutate(sentences, SENTENCE_MUTATION_RATE):
+    for sentence in sentences:
+        if random.random() < SENTENCE_MUTATION_RATE:
+            # flip a coin, if heads add a word, if tails remove a word
+            if random.random() < 0.5:
+                # if the sentence does not have a fitness value = len(sentence) - 1
+                if sentence[-1] != len(sentence) - 1:
+                    # add a 5 letter word at the end (before the fitness value)
+                    word = ''
+                    for i in range(5):
+                        # add a random letter to the word
+                        word += random.choice(geneSet)
+                    sentence.insert(-1, word)
+            else:
+                # if the sentence has 3 or more words
+                if len(sentence) > 3:
+                    # remove the last word
+                    sentence.pop(-2)
+    return sentences
+
+def word_mutate(sentences, WORD_MUTATION_RATE):
+    for sentence in sentences:
+        for i in range(len(sentence) - 1):
+            if random.random() < WORD_MUTATION_RATE:
+                # flip a coin, if heads add a letter, if tails remove a letter
+   
+   
     
 test_sentences = sentences(7, 10, 5)
 # append a sentence with some real words
-test_sentences.append(['hello', 'world', 'sasrt', 'bdrr', 'wfcra', 'test', 'sentence', 'asruuul', 'jarfer', 'pppo', 0])
+test_sentences.append(['hello', 'world', 'sasrt', 'bdrr', 'wfcra', 'ttt', 'qq', 'asruuul', 'jarfer', 'pppo', 0])
 print("Initial sentences:")
 display(test_sentences)
 
@@ -120,11 +146,15 @@ print("Initial sentences with fitness:")
 display(test_sentences)
 
 EPOCHS = 5
+SENTENCE_MUTATION_RATE = 1
+WORD_MUTATION_RATE = 1
 
 # loop through the epochs
 for i in range(EPOCHS):
     # breed the sentences
     test_sentences = crossover(test_sentences)
+    # sentence mutation
+    test_sentences = sentence_mutate(test_sentences, SENTENCE_MUTATION_RATE)
     # calculate the fitness of each sentence
     test_sentences = fitness(test_sentences, wordset)
     # display the sentences
