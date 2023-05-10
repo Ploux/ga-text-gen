@@ -2,7 +2,7 @@ import random
 import datetime
 
 
-EPOCHS = 5000
+EPOCHS = 10000
 NUM_SENTENCES = 40
 NUM_WORDS = 10
 NUM_LETTERS = 5
@@ -27,6 +27,18 @@ def make_word_set(file):
         wordset = set([word for word in words])
         # return the wordset
     return wordset
+
+def make_corpus(file):
+    # this function takes a file and creates a set of all the words
+    # open the file
+    with open(file, 'r') as f:
+        # read the file
+        text = f.read()
+        # split the text into a list of words
+        words = text.split()
+        corpus = set([word for word in words])
+        # return the wordset
+    return corpus
 
 # function to generate random sentences
 def generate_sentences(num, words, letters):
@@ -65,11 +77,11 @@ def fitness(sentences, wordset):
             length += len(sentence[i])
             # if the word is in the wordset
             if sentence[i] in wordset:
-                # add length of the word to the fitness if the length
-                #if len(sentence[i]) >= 2:
-                fitness += 1.1*len(sentence[i])
-        # add average length of words in the sentence
-        # fitness += length/(len(sentence)-1)
+
+                fitness += 0.1*len(sentence[i])
+            # if the word is in the corpus
+            if sentence[i] in corpus:
+                fitness += len(sentence[i])
         # update the fitness value of the sentence
         sentence[-1] = fitness
         # if two words in a row are the same, make fitness = 0
@@ -204,8 +216,8 @@ test_sentences = generate_sentences(NUM_SENTENCES, NUM_WORDS, NUM_LETTERS)
 # display(test_sentences)
 
 # create a wordset
-# wordset = make_word_set("words_sorted.txt")
-wordset = make_word_set("hound_words.txt")
+wordset = make_word_set("words_sorted.txt")
+corpus = make_corpus("hound_words.txt")
 
 
 # calculate the fitness of each sentence
