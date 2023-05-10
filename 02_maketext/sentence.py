@@ -2,8 +2,8 @@ import random
 import datetime
 
 
-EPOCHS = 10000
-NUM_SENTENCES = 20
+EPOCHS = 2000
+NUM_SENTENCES = 40
 NUM_WORDS = 10
 NUM_LETTERS = 5
 MAX_WORDS = 20
@@ -15,16 +15,16 @@ SELECT_RATE = 0.5
 
 geneSet = "abcdefghijklmnopqrstuvwxyz"
 
-def make_word_set(file):
+def make_word_set(file1, file2):
     # this function takes a file and creates a set of all the words
     # open the file
-    with open(file, 'r') as f:
+    with open(file1, 'r') as f:
         # read the file
         text = f.read()
         # split the text into a list of words
         words = text.split()
-        # create a set of the words that are 3 or more letters long
-        wordset = set([word for word in words if len(word) > 2])
+        # create a set of the words that are 4 or more letters long
+        wordset = set([word for word in words if len(word) > 3])
         # add the words 'a' and 'i' to the wordset
         wordset.add('a')
         wordset.add('i')
@@ -32,31 +32,19 @@ def make_word_set(file):
         two_letters = ["as", "to", "be", "in", "by", "is", "it", "at", "of", "or", "on", "an", "us", "if", "my", "do", "no", "he", "up", "so", "pm", "am", "me", "re", "go", "cd", "tv", "pc", "id", "oh", "ma", "mr", "ms", "dr", "os", "ex", "ft", "vs", "ie", "eg"]
         for word in two_letters:
             wordset.add(word)
-        # return the wordset
-        return wordset
-    
-def make_dict(file):
-    # this function creates a new text file that is just the three letter words keeping them in the same order
-    # open the file
-    # each line contains only one word
-    with open(file, 'r') as f:
+    # add the three letter word list to the wordset
+    with open(file2, 'r') as f:
         # read the file
         text = f.read()
         # split the text into a list of words
         words = text.split()
-        # open a new file
-        with open('three_letter_words.txt', 'w') as f:
-            # loop through the wordset
-            # for word in words if len(word) == 3:
-            for word in words:
-                if len(word) == 3:                
-                    # write the word to the new file
-                    f.write(word + '\n')
-                
-                
-        
-
-        
+        # loop through the wordset
+        for word in words:
+            # add the word to the wordset
+            wordset.add(word)
+            
+        # return the wordset
+        return wordset
 
 # function to generate random sentences
 def generate_sentences(num, words, letters):
@@ -89,12 +77,16 @@ def fitness(sentences, wordset):
     # loop through each sentence
     for sentence in sentences:
         fitness = 0
+        length = 0
         # loop through each word in the sentence
         for i in range(len(sentence) - 1):
+            length += len(sentence[i])
             # if the word is in the wordset
             if sentence[i] in wordset:
                 # add half length of the word to the fitness
-                fitness += 0.5*len(sentence[i])
+                fitness += len(sentence[i])
+        # add average length of words in the sentence
+        # fitness += length/(len(sentence)-1)
         # update the fitness value of the sentence
         sentence[-1] = fitness
         # if two words in a row are the same, make fitness = 0
@@ -229,8 +221,8 @@ test_sentences = generate_sentences(NUM_SENTENCES, NUM_WORDS, NUM_LETTERS)
 # display(test_sentences)
 
 # create a wordset
-make_dict('20k.txt')
-# wordset = make_word_set("20k.txt")
+# make_dict('20k.txt')
+wordset = make_word_set("20k.txt", "3_letter_words_condensed.txt")
 
 
 # calculate the fitness of each sentence
