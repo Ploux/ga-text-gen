@@ -3,14 +3,14 @@ import datetime
 
 
 EPOCHS = 5000
-NUM_SENTENCES = 50
+NUM_SENTENCES = 40
 NUM_WORDS = 10
 NUM_LETTERS = 5
 MAX_WORDS = 20
 CROSSOVER_RATE = 0.1
 SENTENCE_MUTATION_RATE = 1
 WORD_MUTATION_RATE = 1
-WORD_GROWTH_RATE = 0.75 # 0.5 means words have equal chance to grow or shrink
+WORD_GROWTH_RATE = 0.4 # 0.5 means words have equal chance to grow or shrink
 ADAPT_RATE = 1
 SELECT_RATE = 0.5
 
@@ -203,8 +203,8 @@ test_sentences = generate_sentences(NUM_SENTENCES, NUM_WORDS, NUM_LETTERS)
 # display(test_sentences)
 
 # create a wordset
-# make_dict('20k.txt')
-wordset = make_word_set("words_sorted.txt")
+# wordset = make_word_set("words_sorted.txt")
+wordset = make_word_set("hound_words.txt")
 
 
 # calculate the fitness of each sentence
