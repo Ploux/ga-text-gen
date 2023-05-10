@@ -32,9 +32,7 @@ ma
 mr
 ms
 dr
-os
 ex
-ft
 vs
 ie
 eg

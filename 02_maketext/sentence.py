@@ -7,10 +7,10 @@ NUM_SENTENCES = 40
 NUM_WORDS = 10
 NUM_LETTERS = 5
 MAX_WORDS = 20
-CROSSOVER_RATE = 0.1
+CROSSOVER_RATE = 0.05
 SENTENCE_MUTATION_RATE = 1
 WORD_MUTATION_RATE = 1
-WORD_GROWTH_RATE = 0.4 # 0.5 means words have equal chance to grow or shrink
+WORD_GROWTH_RATE = 0.8 # 0.5 means words have equal chance to grow or shrink
 ADAPT_RATE = 1
 SELECT_RATE = 0.5
 
@@ -65,8 +65,9 @@ def fitness(sentences, wordset):
             length += len(sentence[i])
             # if the word is in the wordset
             if sentence[i] in wordset:
-                # add half length of the word to the fitness
-                fitness += len(sentence[i])
+                # add length of the word to the fitness if the length
+                #if len(sentence[i]) >= 2:
+                fitness += 1.1*len(sentence[i])
         # add average length of words in the sentence
         # fitness += length/(len(sentence)-1)
         # update the fitness value of the sentence
