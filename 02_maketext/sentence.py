@@ -51,21 +51,20 @@ def sentences(num, words, letters):
 # function to calculate the fitness of sentences
 def fitness(sentences, wordset):
     # initialize the fitness
-    fitness = 0
     # loop through each sentence
     for sentence in sentences:
+        fitness = 0
         # loop through each word in the sentence
-        for word in sentence:
+        for i in range(len(sentence) - 1):
             # if the word is in the wordset
-            if word in wordset:
+            if sentence[i] in wordset:
                 # add 1 to the fitness
                 fitness += 1
-    # update the fitness value of the sentence
-    sentence[-1] = fitness
+        # update the fitness value of the sentence
+        sentence[-1] = fitness
     # return the list of sentences
     return sentences
 
-    
 
 # function to display the list of sentences
 def display(sentences):
@@ -86,18 +85,52 @@ def display(sentences):
     # print a blank line
     print()
     
+# function to breed the sentences
+def crossover(sentences):
+    # randomize the order of the sentences
+    random.shuffle(sentences)
+    # go through each pair of sentences; for now assume even number of sentences
+    for i in range(0, len(sentences), 2):
+        # for the length of the shorter sentence
+        for j in range(min(len(sentences[i])-1, len(sentences[i + 1])-1)):
+            # check the word at this position in each sentence
+            # if they are both words, or neither are words, do nothing
+            # if one is a word and the other is not, replace the non-word with the word
+            if sentences[i][j] in wordset and sentences[i + 1][j] not in wordset:
+                sentences[i + 1][j] = sentences[i][j]
+            elif sentences[i][j] not in wordset and sentences[i + 1][j] in wordset:
+                sentences[i][j] = sentences[i + 1][j]
+    # return the sentences
+    return sentences
+
+        
+    
 test_sentences = sentences(7, 10, 5)
 # append a sentence with some real words
-test_sentences.append(['hello', 'world', 'this', 'is', 'a', 'test', 'sentence', 'with', 'real', 'words', 0])
+test_sentences.append(['hello', 'world', 'sasrt', 'bdrr', 'wfcra', 'test', 'sentence', 'asruuul', 'jarfer', 'pppo', 0])
+print("Initial sentences:")
 display(test_sentences)
 
+# create a wordset
 wordset = makedict("02_maketext/american-english.txt")
 
+# calculate the fitness of each sentence
 test_sentences = fitness(test_sentences, wordset)
+print("Initial sentences with fitness:")
 display(test_sentences)
 
-# calculate the fitness of each sentence
+EPOCHS = 5
 
+# loop through the epochs
+for i in range(EPOCHS):
+    # breed the sentences
+    test_sentences = crossover(test_sentences)
+    # calculate the fitness of each sentence
+    test_sentences = fitness(test_sentences, wordset)
+    # display the sentences
+    print("Epoch", i + 1)
+    display(test_sentences)   
+    
 
 # create a wordset and print the first 100 words, the length, and save it to a file
 # wordset = makedict("02_maketext/american-english.txt", True)
