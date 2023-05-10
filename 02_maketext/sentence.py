@@ -2,25 +2,29 @@ import random
 import datetime
 
 
-EPOCHS = 1000
+EPOCHS = 10000
+NUM_SENTENCES = 20
+NUM_WORDS = 10
+NUM_LETTERS = 5
+MAX_WORDS = 20
 CROSSOVER_RATE = 0.1
 SENTENCE_MUTATION_RATE = 1
 WORD_MUTATION_RATE = 1
 ADAPT_RATE = 1
+SELECT_RATE = 0.5
 
-geneSet = "abcdefghijklmnopqrstuvwxyz'"
+geneSet = "abcdefghijklmnopqrstuvwxyz"
 
-def makedict(file, newfile=False):
+def make_word_set(file):
     # this function takes a file and creates a set of all the words
-    # newfile is a boolean that determines whether or not to create a new file
     # open the file
     with open(file, 'r') as f:
         # read the file
         text = f.read()
         # split the text into a list of words
         words = text.split()
-        # create a set of the words that are 3 or more letters long, converting them to lowercase
-        wordset = set([word.lower() for word in words if len(word) > 2])
+        # create a set of the words that are 3 or more letters long
+        wordset = set([word for word in words if len(word) > 2])
         # add the words 'a' and 'i' to the wordset
         wordset.add('a')
         wordset.add('i')
@@ -28,18 +32,34 @@ def makedict(file, newfile=False):
         two_letters = ["as", "to", "be", "in", "by", "is", "it", "at", "of", "or", "on", "an", "us", "if", "my", "do", "no", "he", "up", "so", "pm", "am", "me", "re", "go", "cd", "tv", "pc", "id", "oh", "ma", "mr", "ms", "dr", "os", "ex", "ft", "vs", "ie", "eg"]
         for word in two_letters:
             wordset.add(word)
-               
-        # if newfile is true
-        if newfile:
-            # create a new file
-            with open('02_maketext/dict.txt', 'w') as f:
-                # write the wordset to the file
-                f.write(str(wordset))
         # return the wordset
         return wordset
+    
+def make_dict(file):
+    # this function creates a new text file that is just the three letter words keeping them in the same order
+    # open the file
+    # each line contains only one word
+    with open(file, 'r') as f:
+        # read the file
+        text = f.read()
+        # split the text into a list of words
+        words = text.split()
+        # open a new file
+        with open('three_letter_words.txt', 'w') as f:
+            # loop through the wordset
+            # for word in words if len(word) == 3:
+            for word in words:
+                if len(word) == 3:                
+                    # write the word to the new file
+                    f.write(word + '\n')
+                
+                
+        
+
+        
 
 # function to generate random sentences
-def sentences(num, words, letters):
+def generate_sentences(num, words, letters):
     # initialize the list of sentences
     sentences = []
     # loop num times
@@ -73,10 +93,15 @@ def fitness(sentences, wordset):
         for i in range(len(sentence) - 1):
             # if the word is in the wordset
             if sentence[i] in wordset:
-                # add 1 to the fitness
-                fitness += 1
+                # add half length of the word to the fitness
+                fitness += 0.5*len(sentence[i])
         # update the fitness value of the sentence
         sentence[-1] = fitness
+        # if two words in a row are the same, make fitness = 0
+        for i in range(len(sentence) - 2):
+            if sentence[i] == sentence[i + 1]:
+                sentence[-1] = 0
+                continue
     # return the list of sentences
     return sentences
 
@@ -124,8 +149,8 @@ def sentence_mutate(sentences, SENTENCE_MUTATION_RATE):
         if random.random() < SENTENCE_MUTATION_RATE:
             # flip a coin, if heads add a word, if tails remove a word
             if random.random() < 0.5:
-                # if the sentence does not have a fitness value = len(sentence) - 1
-                if len(sentence) < 21 and sentence[-1] != len(sentence) - 1:
+                # if the sentence does not exceed the max number of words and the fitness value is low enough
+                if len(sentence) < MAX_WORDS and sentence[-1] < len(sentence) - 1:
                     # add a 5 letter word at the end (before the fitness value)
                     word = ''
                     for i in range(5):
@@ -134,9 +159,11 @@ def sentence_mutate(sentences, SENTENCE_MUTATION_RATE):
                     sentence.insert(-1, word)
             else:
                 # if the sentence has 3 or more words
-                if len(sentence) > 3 and sentence[-1] != len(sentence) - 1:
-                    # remove the last word
-                    sentence.pop(-2)
+                if len(sentence) >= 3:
+                    # remove a random word if it is not in the wordlist
+                    word = random.choice(sentence[:-1])
+                    if word not in wordset:
+                        sentence.remove(word)
     return sentences
 
 def word_mutate(sentences, wordset, WORD_MUTATION_RATE):
@@ -170,32 +197,47 @@ def adapt(sentences, wordset, ADAPT_RATE):
                     sentence[i] = sentence[i][:index] + random.choice(geneSet) + sentence[i][index + 1:]
                     # sentence[i] = sentence[i][:random.randint(0, len(sentence[i]) - 1)] + random.choice(geneSet) + sentence[i][random.randint(0, len(sentence[i]) - 1):]
     return sentences
-    
-   
-    
-test_sentences = sentences(20, 10, 5)
 
-# append a sentence with some real words
-# test_sentences.append(['hello', 'wooor', 'sasrt', 'bdrr', 'wfcra', 'ttt', 'qq', 'asruuul', 'jarfer', 'pppo', 0])
-# test_sentences.append(['hello', 'wooo', 'sasrt', 'bdrr', 0])
+def selection(sentences):
+    # sort the sentences by fitness
+    sentences.sort(key=lambda x: x[-1], reverse=True)
+    # sum the fitness values
+    total_fitness = sum([sentence[-1] for sentence in sentences])
+    # keep the top sentence
+    selected_sentences = sentences[:1]
+    # for every other sentence
+    for sentence in sentences[1:]:
+        # calculate the probability of being selected
+        prob = sentence[-1] + 1 / (total_fitness + 1)
+        # flip a coin, if heads add the sentence to the selected sentences
+        if random.random() < prob:
+            selected_sentences.append(sentence)
+    # figure out how many new sentences to generate
+    num_new = len(sentences) - len(selected_sentences)
+    # generate new sentences for the bottom
+    new_sentences = generate_sentences(num_new, NUM_WORDS, NUM_LETTERS)
+    # add the new sentences to the list
+    selected_sentences.extend(new_sentences)
+    # return the sentences
+    return selected_sentences
+    
+  
+    
+test_sentences = generate_sentences(NUM_SENTENCES, NUM_WORDS, NUM_LETTERS)
 
-print("Initial sentences:")
-display(test_sentences)
+# print("Initial sentences:")
+# display(test_sentences)
 
 # create a wordset
-wordset = makedict("02_maketext/american-english.txt")
+make_dict('20k.txt')
+# wordset = make_word_set("20k.txt")
+
 
 # calculate the fitness of each sentence
 test_sentences = fitness(test_sentences, wordset)
 print("Initial sentences with fitness:")
 display(test_sentences)
 
-"""
-# test adaptation
-test_sentences = adapt(test_sentences, wordset, 1)
-print("After adaptation:")
-display(test_sentences)
-"""
 
 # loop through the epochs
 for i in range(EPOCHS):
@@ -216,15 +258,15 @@ for i in range(EPOCHS):
     # print("After adapt:")
     # display(test_sentences)
     # calculate the fitness of each sentence
+    test_sentences = selection(test_sentences)
     test_sentences = fitness(test_sentences, wordset)
     # display the sentences
-    print("Epoch", i + 1)
-    display(test_sentences)   
+    if i % 500 == 0:
+        print("Epoch", i + 1)
+        display(test_sentences)   
+print("Epoch", i + 1)
+display(test_sentences)   
     
 
-# create a wordset and print the first 100 words, the length, and save it to a file
-# wordset = makedict("02_maketext/american-english.txt", True)
-# print(list(wordset)[:100])
-# print(len(wordset))
 
     
