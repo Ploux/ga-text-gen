@@ -889,7 +889,6 @@ clogs
 today
 madly
 holes
-himin
 enter
 cling
 haste
@@ -914,7 +913,7 @@ awoke
 negro
 glass
 train
-outré
+outre
 would
 alone
 paler
@@ -983,7 +982,6 @@ leads
 below
 gloss
 paper
-thall
 ripen
 least
 price
@@ -1006,11 +1004,11 @@ wheel
 recur
 thats
 ready
-offof
+off
+of
 leeds
 snips
 spite
-ifrom
 might
 fears
 helps
@@ -1035,7 +1033,8 @@ total
 death
 happy
 coats
-meyou
+me
+you
 claim
 yours
 groan
@@ -1102,7 +1101,6 @@ costa
 dying
 heart
 earth
-goyal
 swore
 tinge
 agony
