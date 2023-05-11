@@ -1,6 +1,8 @@
 import random
 import datetime
 import math
+from nltk import ngrams
+import string
 
 EPOCHS = 50000
 NUM_SENTENCES = 20
@@ -43,6 +45,50 @@ def make_corpus(file):
         corpus = set([word for word in words])
         # return the wordset
     return corpus
+
+def make_bigrams(file):
+    # load text
+    filename = 'hound_clean.txt'
+    with open(file, 'r') as f:
+        # read the file
+        text = f.read()
+    # split into words by white space
+    words = text.split()
+    # remove all punctuation
+    table = str.maketrans('', '', string.punctuation)
+    stripped = [w.translate(table) for w in words]
+    # convert to lower case
+    words = [word.lower() for word in stripped]
+    # remove remaining tokens that are not alphabetic
+    # for example '“penang' should become 'penang'
+    for word in words:
+        if not word.isalpha():
+            new_word = ''
+            for char in word:
+                if char.isalpha():
+                    new_word += char
+            words[words.index(word)] = new_word
+    # create bigrams
+    bigrams = ngrams(words, 2)
+    bigrams_list = list(bigrams)
+    # count the frequency of each bigram
+    bigram_freq = {}
+    for bigram in bigrams_list:
+        # don't add any bigrams with the same word twice
+        if bigram[0] != bigram[1]:
+            if bigram in bigram_freq:
+                bigram_freq[bigram] += 1
+            else:
+                bigram_freq[bigram] = 1
+    # sort the bigram frequency dictionary by value
+    sorted_bigram_freq = dict(sorted(bigram_freq.items(), key=lambda item: item[1], reverse=True))
+    # print the first 10 entries in the sorted bigram frequency dictionary
+    # for i in range(10):
+    #    print(list(sorted_bigram_freq.keys())[i], list(sorted_bigram_freq.values())[i])
+    # return the sorted bigram frequency dictionary
+    return sorted_bigram_freq
+
+
 
 # function to generate random sentences
 def generate_sentences(num, words, letters):
@@ -100,6 +146,7 @@ def display(sentences):
     # put spaces in between the words
     # put a period at the end of the sentence
     # the last word in the sentence is the fitness
+    # display only the first 10 sentences
     for sentence in sentences:
         for i in range(len(sentence) - 1):
             if i == 0:
@@ -213,7 +260,38 @@ def selection(sentences, temp):
     selected_sentences.extend(new_sentences)
     # return the sentences
     return selected_sentences
-    
+
+def format_sentences(sentences, corpus, wordset):
+    for sentence in sentences:
+        for word in sentence[:-1]:
+            # if the word is not in the corpus
+            if word not in corpus and word not in wordset:
+                # remove it
+                sentence.remove(word)
+    return sentences
+
+def bigramify(sentences, corpus, bigrams):
+
+    # loop through the sentences
+    for sentence in sentences:
+        # loop through the sentence
+        for i in range(len(sentence) - 1):
+            # if word is in corpus
+            if sentence[i] in corpus:
+                # look through the bigram dictionary and check all the bigrams starting with that word in order of frequency
+                for bigram in bigrams:
+                    if bigram[0] == sentence[i]:
+                        # search the test sentence for the second word of the bigram
+                        # if it is found, swap the next word in the test sentence with the second word of the bigram
+                        # and continue looping through the test sentence
+                        if bigram[1] in sentence[i+1:]:
+                            # print("Swapping", sentence[i+1], "with", bigram[1])
+                            # swap the words
+                            index_to_swap = i + 1 + sentence[i+1:].index(bigram[1])
+                            sentence[i+1], sentence[index_to_swap] = sentence[index_to_swap], sentence[i+1]
+                            break
+    return sentences
+
   
     
 test_sentences = generate_sentences(NUM_SENTENCES, NUM_WORDS, NUM_LETTERS)
@@ -224,6 +302,7 @@ test_sentences = generate_sentences(NUM_SENTENCES, NUM_WORDS, NUM_LETTERS)
 # create a wordset
 wordset = make_word_set("words_sorted.txt")
 corpus = make_corpus("hound_words.txt")
+bigrams = make_bigrams("hound_clean.txt")
 
 
 # calculate the fitness of each sentence
@@ -255,12 +334,22 @@ for i in range(EPOCHS):
     # calculate the fitness of each sentence
     test_sentences = fitness(test_sentences, wordset, corpus)
     # display the sentences
-    if i % 5000 == 0:
+    if i + 1 % 10000 == 0:
         print("Epoch", i + 1)
         display(test_sentences)   
 print("Epoch", i + 1)
-display(test_sentences)   
-    
+# for testing, append a test sentence to the end of the sentences
+test_sentence = ["was", "it", "google", "the", "of", "was", 45]
+test_sentences.append(test_sentence)
+display(test_sentences)
+# print(test_sentences)
+
+# format the sentences by removing words not in the corpus or the wordlist
+test_sentences = format_sentences(test_sentences, corpus, wordset)
+display(test_sentences) 
+   
+mod1_sentences = bigramify(test_sentences, corpus, bigrams)
+display(mod1_sentences)
 
 
     
