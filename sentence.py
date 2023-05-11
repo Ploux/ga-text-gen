@@ -1,13 +1,12 @@
 """
-Peter Loux
-ECE 8833
-Computational Intelligence
+Peter Loux Sr
+ECE 8833 - Computational Intelligence
 Final Project
+May 11, 2023
 
 This program uses a genetic algorithm to generate sentences that are similar to the sentences in a given corpus.
 
 """
-
 
 import random
 import datetime
@@ -15,8 +14,8 @@ import math
 from nltk import ngrams
 import string
 
-EPOCHS = 10000
-NUM_SENTENCES = 10  # number of sentences to generate
+EPOCHS = 50000     # number of epochs to run
+NUM_SENTENCES = 20  # number of sentences to generate
 NUM_WORDS = 10      # number of words in each initial sentence
 NUM_LETTERS = 5     # number of letters in each initial word
 
@@ -32,6 +31,7 @@ WORD_MUTATION_RATE = 0.05
 WORD_GROWTH_RATE = 0.9          # 0.5 means words have equal chance to grow or shrink
 
 ADAPT_RATE = 1
+ADAPT_CYCLES = 5               # number of times to run adaptation each epoch
 
 geneSet = "abcdefghijklmnopqrstuvwxyz"      
 
@@ -270,6 +270,7 @@ def bigramify(sentences, corpus, bigrams):
 
 # generate initial sentences
 sentences = generate_sentences(NUM_SENTENCES, NUM_WORDS, NUM_LETTERS)
+# display(sentences)
 
 # create a wordset
 wordset = make_word_set("words_sorted.txt")
@@ -293,14 +294,20 @@ for i in range(EPOCHS):
     sentences = word_mutate(sentences, corpus, wordset, WORD_MUTATION_RATE, WORD_GROWTH_RATE, temperature)
 
     # adaptation
-    for j in range(5):
+    for j in range(ADAPT_CYCLES):
         sentences = adapt(sentences, corpus, wordset, geneSet, ADAPT_RATE)
+
+    # calculate the fitness of each sentence
+    sentences = fitness(sentences, wordset, corpus)
 
     # selection
     sentences = selection(sentences, temperature)
 
-    # calculate the fitness of each sentence
-    sentences = fitness(sentences, wordset, corpus)
+    # display sentences every 10000 epochs
+    if i % 10000 == 0:
+        print("Epochs:", i + 1)
+        display(sentences)
+
 
 print("Epochs:", i + 1)
 

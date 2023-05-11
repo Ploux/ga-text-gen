@@ -1395,7 +1395,8 @@ gives
 manor
 scorn
 hobby
-godno
+god
+no
 cards
 sweet
 while
@@ -1477,7 +1478,8 @@ bosom
 field
 suits
 moved
-usthe
+us
+the
 scrub
 stars
 piece
@@ -5673,7 +5675,8 @@ probabilities
 reincarnation
 uninteresting
 recollections
-hypothesiswho
+hypothesis
+who
 counteracting
 weatherbeaten
 investigating
@@ -5755,7 +5758,7 @@ graniteflecked
 selfimportance
 disapprobation
 miscalculation
-probabilityand
+probability
 northumberland
 strikinglooking
 spanishamerican

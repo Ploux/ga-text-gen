@@ -1,3 +1,12 @@
+"""
+Peter Loux Sr
+ECE 8833 - Computational Intelligence
+Final Project
+May 11, 2023
+
+This program is used to generate a list of words from the text of the book which is used as the corpus.
+"""
+
 # load text
 filename = 'hound_clean.txt'
 file = open(filename, 'rt' )
