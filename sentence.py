@@ -1,56 +1,53 @@
+"""
+Peter Loux
+ECE 8833
+Computational Intelligence
+Final Project
+
+This program uses a genetic algorithm to generate sentences that are similar to the sentences in a given corpus.
+
+"""
+
+
 import random
 import datetime
 import math
 from nltk import ngrams
 import string
 
-EPOCHS = 50000
-NUM_SENTENCES = 20
-NUM_WORDS = 10
-NUM_LETTERS = 5
-MAX_WORDS = 20
+EPOCHS = 10000
+NUM_SENTENCES = 10  # number of sentences to generate
+NUM_WORDS = 10      # number of words in each initial sentence
+NUM_LETTERS = 5     # number of letters in each initial word
 
-CROSSOVER_RATE = 0.005
+MAX_WORDS = 15      # maximum number of words in a sentence
+MAX_LETTERS = 15    # maximum number of letters in a word
 
-SENTENCE_MUTATION_RATE = 0.05
-SENTENCE_GROWTH_RATE = 0.2 # 0.5 means sentences have equal chance to grow or shrink
+CROSSOVER_RATE = 0.001  
+
+SENTENCE_MUTATION_RATE = 0.1
+SENTENCE_GROWTH_RATE = 0.2      # 0.5 means sentences have equal chance to grow or shrink
 
 WORD_MUTATION_RATE = 0.05
-WORD_GROWTH_RATE = 0.7 # 0.5 means words have equal chance to grow or shrink
+WORD_GROWTH_RATE = 0.9          # 0.5 means words have equal chance to grow or shrink
 
-ADAPT_RATE = 0.9
+ADAPT_RATE = 1
 
-geneSet = "abcdefghijklmnopqrstuvwxyz"
+geneSet = "abcdefghijklmnopqrstuvwxyz"      
 
+# takes a text file and creates a set of all valid words
 def make_word_set(file):
-    # this function takes a file and creates a set of all the words
-    # open the file
     with open(file, 'r') as f:
-        # read the file
         text = f.read()
-        # split the text into a list of words
         words = text.split()
+        # set removes duplicates
         wordset = set([word for word in words])
-        # return the wordset
     return wordset
 
-def make_corpus(file):
-    # this function takes a file and creates a set of all the words
-    # open the file
-    with open(file, 'r') as f:
-        # read the file
-        text = f.read()
-        # split the text into a list of words
-        words = text.split()
-        corpus = set([word for word in words])
-        # return the wordset
-    return corpus
-
+# takes a text file and creates a sorted dictionary of bigrams and their frequencies
 def make_bigrams(file):
-    # load text
     filename = 'hound_clean.txt'
     with open(file, 'r') as f:
-        # read the file
         text = f.read()
     # split into words by white space
     words = text.split()
@@ -82,51 +79,38 @@ def make_bigrams(file):
                 bigram_freq[bigram] = 1
     # sort the bigram frequency dictionary by value
     sorted_bigram_freq = dict(sorted(bigram_freq.items(), key=lambda item: item[1], reverse=True))
-    # print the first 10 entries in the sorted bigram frequency dictionary
-    # for i in range(10):
-    #    print(list(sorted_bigram_freq.keys())[i], list(sorted_bigram_freq.values())[i])
-    # return the sorted bigram frequency dictionary
     return sorted_bigram_freq
 
-
-
-# function to generate random sentences
+# generates random sentences of gibberish
 def generate_sentences(num, words, letters):
     # initialize the list of sentences
     sentences = []
-    # loop num times
     for i in range(num):
         # initialize the sentence
         sentence = []
-        # loop words times
         for i in range(words):
             # initialize the word
             word = ''
-            # loop letters times
             for i in range(letters):
                 # add a random letter to the word
                 word += random.choice(geneSet)
-            # add the word to the sentence
             sentence.append(word)
         # append a zero to the sentence for the initial fitness
         sentence.append(0)
-        # add the sentence to the list of sentences
         sentences.append(sentence)
-    # return the list of sentences
     return sentences
 
-# function to calculate the fitness of sentences
+# calculate the fitness of sentences
 def fitness(sentences, wordset, corpus):
-    # initialize the fitness
-    # loop through each sentence
     for sentence in sentences:
+        # initialize the fitness
         fitness = 0
         # loop through each word in the sentence
         for i in range(len(sentence) - 1):
-            # if the word is in the wordset
+            # if the word is in the wordset, score points
             if sentence[i] in wordset:
                 fitness += 0.1*len(sentence[i])
-            # if the word is in the corpus
+            # if the word is in the corpus, score more points
             if sentence[i] in corpus:
                 fitness += len(sentence[i])
         # update the fitness value of the sentence
@@ -135,18 +119,14 @@ def fitness(sentences, wordset, corpus):
         for i in range(len(sentence) - 2):
             if sentence[i] == sentence[i + 1]:
                 sentence[-1] = 0
-                
-    # return the list of sentences
     return sentences
 
-
-# function to display the list of sentences
+# display the list of sentences and their fitness values
 def display(sentences):
     # capitalize the first letter of the first word
     # put spaces in between the words
     # put a period at the end of the sentence
     # the last word in the sentence is the fitness
-    # display only the first 10 sentences
     for sentence in sentences:
         for i in range(len(sentence) - 1):
             if i == 0:
@@ -159,17 +139,17 @@ def display(sentences):
         print(round(sentence[-1], 1))
     print()
     
-# function to breed the sentences
+# breed the good sentences
 def crossover(sentences, corpus, crossover_rate, temp):
     # randomize the order of the sentences
     random.shuffle(sentences)
-    # go through each pair of sentences; for now assume even number of sentences
+    # go through each pair of sentences; assume even number of sentences
     for i in range(0, len(sentences), 2):
         # check for crossover
         if random.random() < crossover_rate * temp:
             # pick a random position in the shorter sentence
             pos = random.randint(0, min(len(sentences[i])-2, len(sentences[i + 1])-2))
-            # if one sentence has a corpus word at that position and the other doesn't replace the non-corpus word with the corpus word
+            # if one sentence has a corpus word at that position and the other doesn't, replace the non-corpus word with the corpus word
             if sentences[i][pos] in corpus and sentences[i + 1][pos] not in corpus:
                 sentences[i + 1][pos] = sentences[i][pos]
             elif sentences[i][pos] not in corpus and sentences[i + 1][pos] in corpus:
@@ -177,6 +157,7 @@ def crossover(sentences, corpus, crossover_rate, temp):
     # return the sentences
     return sentences
 
+# grow or shrink the sentences
 def sentence_mutate(sentences, corpus, sentence_mutate_rate, sentence_growth_rate, max_words, num_letters, temp):
     for sentence in sentences:
         if random.random() < sentence_mutate_rate * temp:
@@ -193,22 +174,22 @@ def sentence_mutate(sentences, corpus, sentence_mutate_rate, sentence_growth_rat
             else:
                 # if the sentence has 3 or more words
                 if len(sentence) > 3:
-                    
                     # remove a random word if it is not in the corpus
                     word = random.choice(sentence[:-1])
                     if word not in corpus:
                         sentence.remove(word)
     return sentences
 
+# grow or shrink words
 def word_mutate(sentences, corpus, wordset, word_mutation_rate, word_growth_rate, temp):
     for sentence in sentences:
         for i in range(len(sentence) - 1):
             # if the word is not in the corpus
             if sentence[i] not in corpus and sentence[i] not in wordset:
-                # flip a coin, if heads add a letter, if tails remove a letter
+                # check for mutation
                 if random.random() < word_mutation_rate * temp:
                     # flip a coin, if heads add a letter, if tails remove a letter
-                    if len(sentence[i]) < 15 and random.random() < word_growth_rate:
+                    if len(sentence[i]) < MAX_LETTERS and random.random() < word_growth_rate:
                         # add a letter
                         sentence[i] += random.choice(geneSet)
                     else:
@@ -217,6 +198,7 @@ def word_mutate(sentences, corpus, wordset, word_mutation_rate, word_growth_rate
                             sentence[i] = sentence[i][:-1]
     return sentences
 
+# adapt the sentences - change random letters to random letters
 def adapt(sentences, corpus, wordset, geneSet, adapt_rate):
     # goes through each sentence, if a word is not in the corpus, replace a random letter with a random letter
     for sentence in sentences:
@@ -224,28 +206,22 @@ def adapt(sentences, corpus, wordset, geneSet, adapt_rate):
             # if the word is not in the corpus
             if sentence[i] not in corpus:
                 rand_adapt = random.random()
-                if (sentence[i] in wordset and rand_adapt < adapt_rate/100) or (sentence[i] not in wordset and rand_adapt < adapt_rate):
+                # wordset words are much less likely to be adapted
+                if (sentence[i] in wordset and rand_adapt < adapt_rate/1000) or (sentence[i] not in wordset and rand_adapt < adapt_rate):
                     # replace a random letter with a random letter (might be the same, this is fine)
                     # choose a random index
                     index = random.randint(0, len(sentence[i]) - 1)
                     # replace the letter at that index with a random letter
                     sentence[i] = sentence[i][:index] + random.choice(geneSet) + sentence[i][index + 1:]
-                    # sentence[i] = sentence[i][:random.randint(0, len(sentence[i]) - 1)] + random.choice(geneSet) + sentence[i][random.randint(0, len(sentence[i]) - 1):]
     return sentences
 
+# select the sentences to keep
 def selection(sentences, temp):
     # sort the sentences by fitness
     sentences.sort(key=lambda x: x[-1], reverse=True)
     # sum the fitness values
     total_fitness = sum([sentence[-1] for sentence in sentences])
     selected_sentences = []
-    """
-    # keep the first floor(epoch/epochs * len(sentences)) sentences
-    selected = math.floor(epoch/epochs * len(sentences))
-    for i in range(selected):
-        selected_sentences.append(sentences[i])
-    """
-    # for every other sentence
     for sentence in sentences:
         # calculate the probability of being selected
         prob = (sentence[-1] + 1 / (total_fitness + 1)) * (1/temp)
@@ -261,6 +237,7 @@ def selection(sentences, temp):
     # return the sentences
     return selected_sentences
 
+# remove words that are not in the corpus or the wordset
 def format_sentences(sentences, corpus, wordset):
     for sentence in sentences:
         for word in sentence[:-1]:
@@ -270,8 +247,8 @@ def format_sentences(sentences, corpus, wordset):
                 sentence.remove(word)
     return sentences
 
+# attempt to put words in bigram order
 def bigramify(sentences, corpus, bigrams):
-
     # loop through the sentences
     for sentence in sentences:
         # loop through the sentence
@@ -285,71 +262,51 @@ def bigramify(sentences, corpus, bigrams):
                         # if it is found, swap the next word in the test sentence with the second word of the bigram
                         # and continue looping through the test sentence
                         if bigram[1] in sentence[i+1:]:
-                            # print("Swapping", sentence[i+1], "with", bigram[1])
                             # swap the words
                             index_to_swap = i + 1 + sentence[i+1:].index(bigram[1])
                             sentence[i+1], sentence[index_to_swap] = sentence[index_to_swap], sentence[i+1]
                             break
     return sentences
 
-  
-    
-test_sentences = generate_sentences(NUM_SENTENCES, NUM_WORDS, NUM_LETTERS)
-
-# print("Initial sentences:")
-# display(test_sentences)
+# generate initial sentences
+sentences = generate_sentences(NUM_SENTENCES, NUM_WORDS, NUM_LETTERS)
 
 # create a wordset
 wordset = make_word_set("words_sorted.txt")
-corpus = make_corpus("hound_words.txt")
+corpus = make_word_set("hound_words.txt")
 bigrams = make_bigrams("hound_clean.txt")
 
-
 # calculate the fitness of each sentence
-test_sentences = fitness(test_sentences, wordset, corpus)
-# print("Initial sentences with fitness:")
-# display(test_sentences)
-
+sentences = fitness(sentences, wordset, corpus)
 
 # loop through the epochs
 for i in range(EPOCHS):
     temperature = 1 - i/EPOCHS
-    # breed the sentences
-    test_sentences = crossover(test_sentences, corpus, CROSSOVER_RATE, temperature)
-    # print("After crossover:")
-    # display(test_sentences)
+
+    # crossover
+    sentences = crossover(sentences, corpus, CROSSOVER_RATE, temperature)
+
     # sentence mutation
-    test_sentences = sentence_mutate(test_sentences, corpus, SENTENCE_MUTATION_RATE, SENTENCE_GROWTH_RATE, MAX_WORDS, NUM_LETTERS, temperature)
-    # print("After sentence mutation:")
-    # display(test_sentences)
+    sentences = sentence_mutate(sentences, corpus, SENTENCE_MUTATION_RATE, SENTENCE_GROWTH_RATE, MAX_WORDS, NUM_LETTERS, temperature)
+    
     # word mutation
-    test_sentences = word_mutate(test_sentences, corpus, wordset, WORD_MUTATION_RATE, WORD_GROWTH_RATE, temperature)
-    # print("After word mutation:")
-    # display(test_sentences)
-    # adapt
-    test_sentences = adapt(test_sentences, corpus, wordset, geneSet, ADAPT_RATE)
-    # print("After adapt:")
-    # display(test_sentences)
-    test_sentences = selection(test_sentences, temperature)
+    sentences = word_mutate(sentences, corpus, wordset, WORD_MUTATION_RATE, WORD_GROWTH_RATE, temperature)
+
+    # adaptation
+    for j in range(5):
+        sentences = adapt(sentences, corpus, wordset, geneSet, ADAPT_RATE)
+
+    # selection
+    sentences = selection(sentences, temperature)
+
     # calculate the fitness of each sentence
-    test_sentences = fitness(test_sentences, wordset, corpus)
-    # display the sentences
-    if i + 1 % 10000 == 0:
-        print("Epoch", i + 1)
-        display(test_sentences)   
-print("Epoch", i + 1)
-# for testing, append a test sentence to the end of the sentences
-test_sentence = ["was", "it", "google", "the", "of", "was", 45]
-test_sentences.append(test_sentence)
-display(test_sentences)
-# print(test_sentences)
+    sentences = fitness(sentences, wordset, corpus)
+
+print("Epochs:", i + 1)
 
 # format the sentences by removing words not in the corpus or the wordlist
-test_sentences = format_sentences(test_sentences, corpus, wordset)
-display(test_sentences) 
+sentences = format_sentences(sentences, corpus, wordset)
    
-mod1_sentences = bigramify(test_sentences, corpus, bigrams)
-display(mod1_sentences)
+mod1_sentences = bigramify(sentences, corpus, bigrams)
 
-
-    
+display(mod1_sentences)    
