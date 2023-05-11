@@ -3,12 +3,17 @@ import datetime
 
 
 EPOCHS = 10000
-NUM_SENTENCES = 40
+NUM_SENTENCES = 20
 NUM_WORDS = 10
 NUM_LETTERS = 5
 MAX_WORDS = 20
-CROSSOVER_RATE = 0.05
-SENTENCE_MUTATION_RATE = 1
+
+CROSSOVER_RATE = 0.01
+
+SENTENCE_MUTATION_RATE = 0.1
+SENTENCE_GROWTH_RATE = 0.5 # 0.5 means sentences have equal chance to grow or shrink
+
+
 WORD_MUTATION_RATE = 1
 WORD_GROWTH_RATE = 0.8 # 0.5 means words have equal chance to grow or shrink
 ADAPT_RATE = 1
@@ -66,18 +71,15 @@ def generate_sentences(num, words, letters):
     return sentences
 
 # function to calculate the fitness of sentences
-def fitness(sentences, wordset):
+def fitness(sentences, wordset, corpus):
     # initialize the fitness
     # loop through each sentence
     for sentence in sentences:
         fitness = 0
-        length = 0
         # loop through each word in the sentence
         for i in range(len(sentence) - 1):
-            length += len(sentence[i])
             # if the word is in the wordset
             if sentence[i] in wordset:
-
                 fitness += 0.1*len(sentence[i])
             # if the word is in the corpus
             if sentence[i] in corpus:
@@ -88,7 +90,7 @@ def fitness(sentences, wordset):
         for i in range(len(sentence) - 2):
             if sentence[i] == sentence[i + 1]:
                 sentence[-1] = 0
-                continue
+                
     # return the list of sentences
     return sentences
 
@@ -106,50 +108,48 @@ def display(sentences):
             elif i < len(sentence) - 2:
                 print(sentence[i], end=' ')
             else:
-                print(sentence[i], end='. ')
-        print(sentence[-1])
-
-    # print a blank line
+                print(sentence[i], end='.  ')
+        # print the fitness value rounded to 1 decimal place
+        print(round(sentence[-1], 1))
     print()
     
 # function to breed the sentences
-def crossover(sentences, wordset, CROSSOVER_RATE):
+def crossover(sentences, corpus, crossover_rate):
     # randomize the order of the sentences
     random.shuffle(sentences)
     # go through each pair of sentences; for now assume even number of sentences
     for i in range(0, len(sentences), 2):
-        # for the length of the shorter sentence
-        for j in range(min(len(sentences[i])-1, len(sentences[i + 1])-1)):
-            # check the word at this position in each sentence
-            # if they are both words, or neither are words, do nothing
-            # if one is a word and the other is not, replace the non-word with the word
-            if random.random() < CROSSOVER_RATE:
-                if sentences[i][j] in wordset and sentences[i + 1][j] not in wordset:
-                    sentences[i + 1][j] = sentences[i][j]
-                elif sentences[i][j] not in wordset and sentences[i + 1][j] in wordset:
-                    sentences[i][j] = sentences[i + 1][j]
+        # check for crossover
+        if random.random() < crossover_rate:
+            # pick a random position in the shorter sentence
+            pos = random.randint(0, min(len(sentences[i])-2, len(sentences[i + 1])-2))
+            # if one sentence has a corpus word at that position and the other doesn't replace the non-corpus word with the corpus word
+            if sentences[i][pos] in corpus and sentences[i + 1][pos] not in corpus:
+                sentences[i + 1][pos] = sentences[i][pos]
+            elif sentences[i][pos] not in corpus and sentences[i + 1][pos] in corpus:
+                sentences[i][pos] = sentences[i + 1][pos]
     # return the sentences
     return sentences
 
-def sentence_mutate(sentences, SENTENCE_MUTATION_RATE):
+def sentence_mutate(sentences, corpus, sentence_mutate_rate, sentence_growth_rate, max_words, num_letters):
     for sentence in sentences:
-        if random.random() < SENTENCE_MUTATION_RATE:
-            # flip a coin, if heads add a word, if tails remove a word
-            if random.random() < 0.5:
-                # if the sentence does not exceed the max number of words and the fitness value is low enough
-                if len(sentence) < MAX_WORDS and sentence[-1] < len(sentence) - 1:
-                    # add a 5 letter word at the end (before the fitness value)
+        if random.random() < sentence_mutate_rate:
+            # determine whether to grow or shrink the sentence
+            if random.random() < sentence_growth_rate:
+                # if the sentence does not exceed the max number of words
+                if len(sentence) < max_words:
+                    # add a word at the end (before the fitness value)
                     word = ''
-                    for i in range(5):
+                    for i in range(num_letters):
                         # add a random letter to the word
                         word += random.choice(geneSet)
                     sentence.insert(-1, word)
             else:
                 # if the sentence has 3 or more words
-                if len(sentence) >= 4:
-                    # remove a random word if it is not in the wordlist
+                if len(sentence) >= 3:
+                    # remove a random word if it is not in the corpus
                     word = random.choice(sentence[:-1])
-                    if word not in wordset:
+                    if word not in corpus:
                         sentence.remove(word)
     return sentences
 
@@ -221,19 +221,19 @@ corpus = make_corpus("hound_words.txt")
 
 
 # calculate the fitness of each sentence
-test_sentences = fitness(test_sentences, wordset)
-print("Initial sentences with fitness:")
-display(test_sentences)
+test_sentences = fitness(test_sentences, wordset, corpus)
+# print("Initial sentences with fitness:")
+# display(test_sentences)
 
 
 # loop through the epochs
 for i in range(EPOCHS):
     # breed the sentences
-    test_sentences = crossover(test_sentences, wordset, CROSSOVER_RATE)
+    test_sentences = crossover(test_sentences, corpus, CROSSOVER_RATE)
     # print("After crossover:")
     # display(test_sentences)
     # sentence mutation
-    test_sentences = sentence_mutate(test_sentences, SENTENCE_MUTATION_RATE)
+    test_sentences = sentence_mutate(test_sentences, corpus, SENTENCE_MUTATION_RATE, SENTENCE_GROWTH_RATE, MAX_WORDS, NUM_LETTERS)
     # print("After sentence mutation:")
     # display(test_sentences)
     # word mutation
@@ -246,7 +246,7 @@ for i in range(EPOCHS):
     # display(test_sentences)
     # calculate the fitness of each sentence
     test_sentences = selection(test_sentences)
-    test_sentences = fitness(test_sentences, wordset)
+    test_sentences = fitness(test_sentences, wordset, corpus)
     # display the sentences
     if i % 1000 == 0:
         print("Epoch", i + 1)

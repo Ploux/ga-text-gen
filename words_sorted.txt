@@ -260,13 +260,10 @@ hip
 dot
 hiv
 pda
-dsl
-zum
 dna
 tim
 don
 gps
-acc
 cap
 ink
 pin
@@ -274,7 +271,6 @@ raw
 gnu
 ben
 hat
-lib
 cam
 wet
 ram
@@ -287,7 +283,6 @@ sam
 ref
 kid
 pan
-nfl
 sum
 oak
 vat
@@ -514,7 +509,6 @@ psi
 pct
 gig
 liz
-tmp
 ate
 fin
 mud
@@ -4079,10 +4073,8 @@ blake
 orbit
 niger
 bacon
-paxil
 spine
 trout
-apnic
 fatty
 joyce
 marco
